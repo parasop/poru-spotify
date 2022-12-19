@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Spotify = void 0;
 const undici_1 = require("undici");
-const Track_1 = require("poru/src/guild/Track");
 const poru_1 = require("poru");
 let spotifyPattern = /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 class Spotify extends poru_1.Plugin {
@@ -164,7 +163,7 @@ class Spotify extends poru_1.Plugin {
     async buildUnresolved(track, requester) {
         if (!track)
             throw new ReferenceError("The Spotify track object was not provided");
-        return new Track_1.Track({
+        return new Object({
             track: "",
             info: {
                 sourceName: "spotify",

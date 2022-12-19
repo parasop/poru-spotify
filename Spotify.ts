@@ -1,5 +1,5 @@
 import {fetch, Request} from "undici";
-import { trackInfo } from "poru/src/guild/Track";
+//import { trackInfo } from "poru/src/guild/Track";
 import { Plugin ,Poru , ResolveOptions} from "poru";
 let spotifyPattern =
   /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
