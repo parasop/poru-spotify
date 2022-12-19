@@ -42,7 +42,7 @@ export declare class Spotify extends Plugin {
     } | {
         exception?: undefined;
     })>;
-    fetchAlbum(id: any, requester: any): Promise<{
+    fetchAlbum(id: string, requester: any): Promise<{
         loadType: any;
         tracks: any;
         playlistInfo: {

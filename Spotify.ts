@@ -22,7 +22,7 @@ export interface SpotifyAccessTokenAPIResult {
 export class Spotify extends Plugin {
   private baseURL: string;
   private authorization: string;
-  private token:string;
+  private token:string
   private interval:number;
   public poru:Poru;
   public options: SpotifyOptions;
@@ -75,7 +75,7 @@ async requestToken() {
 
       this.token = `Bearer ${body.access_token}`;
       this.interval = body.expires_in * 1000;
-    } catch (e) {
+    } catch (e:any) {
       if (e.status === 400) {
         throw new Error("Spotify Plugin has been rate limited");
       }
@@ -111,7 +111,7 @@ public async resolve({query,source,requester}:ResolveOptions){
     if(source ==="spotify"&& !this.check(query)) return this.fetch(query,requester);
 
     const data = spotifyPattern.exec(query) ?? [];
-    const id:string|number = data[2];
+    const id:string = data[2];
     switch (data[1]) {
       case "playlist": {
         return this.fetchPlaylist(id,requester);
@@ -129,7 +129,7 @@ public async resolve({query,source,requester}:ResolveOptions){
 
 
 }
-async fetchPlaylist(id,requester) {
+async fetchPlaylist(id,requester:any) {
     try {
       const playlist:any = await this.requestData(`/playlists/${id}`);
       await this.fetchPlaylistTracks(playlist);
@@ -138,11 +138,11 @@ async fetchPlaylist(id,requester) {
         ? playlist.tracks.items.slice(0, this.options.playlistLimit): playlist.tracks.items;
 
       const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x) => this.buildUnresolved(x.track,requester))
+        limitedTracks.map((x:any) => this.buildUnresolved(x.track,requester))
       );
 
       return this.buildResponse("PLAYLIST_LOADED",unresolvedPlaylistTracks,playlist.name);
-    } catch (e) {
+    } catch (e:any) {
       return this.buildResponse(
         e.status === 404 ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -152,7 +152,7 @@ async fetchPlaylist(id,requester) {
     }
   }
 
-  async fetchAlbum(id,requester) {
+  async fetchAlbum(id:string,requester:any) {
     try {
       const album:any = await this.requestData(`/albums/${id}`);
 
@@ -161,14 +161,14 @@ async fetchPlaylist(id,requester) {
         : album.tracks.items;
 
       const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x) => this.buildUnresolved(x,requester))
+        limitedTracks.map((x:any) => this.buildUnresolved(x,requester))
       );
       return this.buildResponse(
         "PLAYLIST_LOADED",
         unresolvedPlaylistTracks,
         album.name
       );
-    } catch (e) {
+    } catch (e:any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -178,7 +178,7 @@ async fetchPlaylist(id,requester) {
     }
   }
 
-  async fetchArtist(id,requester) {
+  async fetchArtist(id,requester:any) {
     try {
       const artist:any = await this.requestData(`/artists/${id}`);
 
@@ -191,7 +191,7 @@ async fetchPlaylist(id,requester) {
         : data.tracks;
 
       const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x) => this.buildUnresolved(x,requester))
+        limitedTracks.map((x:any) => this.buildUnresolved(x,requester))
       );
 
       return this.buildResponse(
@@ -199,7 +199,7 @@ async fetchPlaylist(id,requester) {
         unresolvedPlaylistTracks,
         artist.name
       );
-    } catch (e) {
+    } catch (e:any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -209,13 +209,13 @@ async fetchPlaylist(id,requester) {
     }
   }
 
-  async fetchTrack(id,requester) {
+  async fetchTrack(id,requester:any) {
     try {
       const data = await this.requestData(`/tracks/${id}`);
       const unresolvedTrack = await this.buildUnresolved(data,requester);
 
       return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
-    } catch (e) {
+    } catch (e:any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -225,7 +225,7 @@ async fetchPlaylist(id,requester) {
     }
   }
 
-  async fetch(query:string,requester) {
+  async fetch(query:string,requester:any) {
     try {
       if (this.check(query)) return this.resolve({query,source:this.poru.options.defaultPlatform,requester});
 
@@ -235,10 +235,10 @@ async fetchPlaylist(id,requester) {
         }`
       );
       const unresolvedTracks = await Promise.all(
-        data.tracks.items.map((x) => this.buildUnresolved(x,requester))
+        data.tracks.items.map((x:any) => this.buildUnresolved(x,requester))
       );
       return this.buildResponse("TRACK_LOADED", unresolvedTracks);
-    } catch (e) {
+    } catch (e:any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -249,7 +249,7 @@ async fetchPlaylist(id,requester) {
   }
 
 
-  async fetchPlaylistTracks(spotifyPlaylist) {
+  async fetchPlaylistTracks(spotifyPlaylist:any) {
     let nextPage = spotifyPlaylist.tracks.next;
     let pageLoaded = 1;
     while (nextPage) {
@@ -266,7 +266,7 @@ async fetchPlaylist(id,requester) {
     }
   }
 
-  async buildUnresolved(track,requester) {
+  async buildUnresolved(track:any,requester:any) {
     if (!track) throw new ReferenceError("The Spotify track object was not provided");
     
 
@@ -289,13 +289,13 @@ async fetchPlaylist(id,requester) {
 
  
  
-  compareValue(value) {
+  compareValue(value:any) {
     return typeof value !== "undefined"
       ? value !== null
       : typeof value !== "undefined";
   }
 
-  buildResponse(loadType, tracks, playlistName?, exceptionMsg?) {
+  buildResponse(loadType:any, tracks:any, playlistName? :any, exceptionMsg?:any) {
     return Object.assign(
       {
         loadType,
