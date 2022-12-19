@@ -1,4 +1,4 @@
-import { Plugin, Poru, ResolveOptions } from "poru";
+import { Plugin, Poru, ResolveOptions, Track } from "poru";
 export interface SpotifyOptions {
     clientID: string;
     clientSecret: string;
@@ -92,7 +92,7 @@ export declare class Spotify extends Plugin {
     })>;
     fetch(query: string, requester: any): any;
     fetchPlaylistTracks(spotifyPlaylist: any): Promise<void>;
-    buildUnresolved(track: any, requester: any): Promise<Object>;
+    buildUnresolved(track: any, requester: any): Promise<Track>;
     compareValue(value: any): boolean;
     buildResponse(loadType: any, tracks: any, playlistName?: any, exceptionMsg?: any): {
         loadType: any;

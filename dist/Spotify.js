@@ -171,7 +171,7 @@ class Spotify extends poru_1.Plugin {
     async buildUnresolved(track, requester) {
         if (!track)
             throw new ReferenceError("The Spotify track object was not provided");
-        return new Object({
+        return new poru_1.Track({
             track: "",
             info: {
                 sourceName: "spotify",
