@@ -1,6 +1,6 @@
 import {fetch, Request} from "undici";
-import { Track } from "poru/src/guild/Track";
-import { Plugin,Poru , ResolveOptions} from "poru";
+import { trackInfo } from "poru/src/guild/Track";
+import { Plugin ,Poru , ResolveOptions} from "poru";
 let spotifyPattern =
   /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 export interface SpotifyOptions {
@@ -270,7 +270,7 @@ async fetchPlaylist(id,requester) {
     if (!track) throw new ReferenceError("The Spotify track object was not provided");
     
 
-    return new Track({
+    return new Object({
       track: "",
       info: {
         sourceName: "spotify",
