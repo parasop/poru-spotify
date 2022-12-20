@@ -11,6 +11,28 @@ export interface SpotifyAccessTokenAPIResult {
     access_token?: string;
     expires_in: number;
 }
+export type loadType = "TRACK_LOADED" | "PLAYLIST_LOADED" | "SEARCH_RESULT" | "NO_MATCHES" | "LOAD_FAILED";
+export interface SpotifyFollower {
+    href: string;
+    total: number;
+}
+export interface SpotifyImage {
+    url: string;
+    height: number;
+    width: number;
+}
+export interface SpotifyUser {
+    display_name: string | null;
+    external_urls: {
+        spotify: string;
+    };
+    followers: SpotifyFollower;
+    href: string;
+    id: string;
+    images: SpotifyImage[];
+    type: "user";
+    uri: string;
+}
 export declare class Spotify extends Plugin {
     private baseURL;
     private authorization;
@@ -24,67 +46,67 @@ export declare class Spotify extends Plugin {
     load(poru: Poru): Promise<void>;
     requestToken(): Promise<void>;
     renew(): Promise<void>;
-    requestData(endpoint: any): Promise<unknown>;
+    requestData(endpoint: string): Promise<unknown>;
     resolve({ query, source, requester }: ResolveOptions): any;
-    fetchPlaylist(id: any, requester: any): Promise<{
-        loadType: any;
+    fetchPlaylist(id: string, requester: any): Promise<{
+        loadType: loadType;
         tracks: any;
         playlistInfo: {
-            name: any;
+            name: string;
         } | {
             name?: undefined;
         };
     } & ({
         exception: {
-            message: any;
+            message: string;
             severity: string;
         };
     } | {
         exception?: undefined;
     })>;
     fetchAlbum(id: string, requester: any): Promise<{
-        loadType: any;
+        loadType: loadType;
         tracks: any;
         playlistInfo: {
-            name: any;
+            name: string;
         } | {
             name?: undefined;
         };
     } & ({
         exception: {
-            message: any;
+            message: string;
             severity: string;
         };
     } | {
         exception?: undefined;
     })>;
-    fetchArtist(id: any, requester: any): Promise<{
-        loadType: any;
+    fetchArtist(id: string, requester: any): Promise<{
+        loadType: loadType;
         tracks: any;
         playlistInfo: {
-            name: any;
+            name: string;
         } | {
             name?: undefined;
         };
     } & ({
         exception: {
-            message: any;
+            message: string;
             severity: string;
         };
     } | {
         exception?: undefined;
     })>;
-    fetchTrack(id: any, requester: any): Promise<{
-        loadType: any;
+    fetchTrack(id: string, requester: any): Promise<{
+        loadType: loadType;
         tracks: any;
         playlistInfo: {
-            name: any;
+            name: string;
         } | {
             name?: undefined;
         };
     } & ({
         exception: {
-            message: any;
+            message: string;
             severity: string;
         };
     } | {
@@ -93,18 +115,18 @@ export declare class Spotify extends Plugin {
     fetch(query: string, requester: any): any;
     fetchPlaylistTracks(spotifyPlaylist: any): Promise<void>;
     buildUnresolved(track: any, requester: any): Promise<Track>;
-    compareValue(value: any): boolean;
-    buildResponse(loadType: any, tracks: any, playlistName?: any, exceptionMsg?: any): {
-        loadType: any;
+    compareValue(value: boolean): boolean;
+    buildResponse(loadType: loadType, tracks: any, playlistName?: string, exceptionMsg?: string): {
+        loadType: loadType;
         tracks: any;
         playlistInfo: {
-            name: any;
+            name: string;
         } | {
             name?: undefined;
         };
     } & ({
         exception: {
-            message: any;
+            message: string;
             severity: string;
         };
     } | {

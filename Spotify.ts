@@ -1,6 +1,7 @@
 import {fetch, Request} from "undici";
 //import { trackInfo } from "poru/src/guild/Track";
 import { Plugin ,Poru , ResolveOptions,Track} from "poru";
+import exp from "constants";
 let spotifyPattern =
   /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 export interface SpotifyOptions {
@@ -18,6 +19,31 @@ export interface SpotifyAccessTokenAPIResult {
     expires_in: number;
 }
 
+export type loadType = "TRACK_LOADED" | "PLAYLIST_LOADED" | "SEARCH_RESULT" | "NO_MATCHES" | "LOAD_FAILED"
+
+export interface SpotifyFollower {
+  href: string,
+  total: number
+}
+
+export interface SpotifyImage {
+  url: string,
+  height: number,
+  width: number,
+}
+
+export interface SpotifyUser {
+  display_name: string | null,
+  external_urls: {
+    spotify: string
+  },
+  followers: SpotifyFollower,
+  href: string,
+  id: string,
+  images: SpotifyImage[],
+  type: "user",
+  uri: string,
+}
 
 export class Spotify extends Plugin {
   private baseURL: string;
@@ -88,7 +114,7 @@ async requestToken() {
     }
   }
 
-  public async requestData(endpoint) {
+  public async requestData(endpoint:string) {
     await this.renew();
 
     const req = await fetch(`${this.baseURL}${/^\//.test(endpoint) ? endpoint : `/${endpoint}`}`,
@@ -129,7 +155,7 @@ public async resolve({query,source,requester}:ResolveOptions){
 
 
 }
-async fetchPlaylist(id,requester:any) {
+async fetchPlaylist(id: string,requester:any) {
     try {
       const playlist:any = await this.requestData(`/playlists/${id}`);
       await this.fetchPlaylistTracks(playlist);
@@ -178,7 +204,7 @@ async fetchPlaylist(id,requester:any) {
     }
   }
 
-  async fetchArtist(id,requester:any) {
+  async fetchArtist(id: string,requester:any) {
     try {
       const artist:any = await this.requestData(`/artists/${id}`);
 
@@ -209,7 +235,7 @@ async fetchPlaylist(id,requester:any) {
     }
   }
 
-  async fetchTrack(id,requester:any) {
+  async fetchTrack(id: string,requester:any) {
     try {
       const data = await this.requestData(`/tracks/${id}`);
       const unresolvedTrack = await this.buildUnresolved(data,requester);
@@ -289,13 +315,13 @@ async fetchPlaylist(id,requester:any) {
 
  
  
-  compareValue(value:any) {
+  compareValue(value:boolean) {
     return typeof value !== "undefined"
       ? value !== null
       : typeof value !== "undefined";
   }
 
-  buildResponse(loadType:any, tracks:any, playlistName? :any, exceptionMsg?:any) {
+  buildResponse(loadType:loadType, tracks:any, playlistName? :string, exceptionMsg?:string) {
     return Object.assign(
       {
         loadType,
