@@ -1,6 +1,6 @@
-import {fetch, Request} from "undici";
+import { fetch, Request } from "undici";
 //import { trackInfo } from "poru/src/guild/Track";
-import { Plugin ,Poru , ResolveOptions,Track} from "poru";
+import { Plugin, Poru, ResolveOptions, Track } from "poru";
 import exp from "constants";
 let spotifyPattern =
   /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
@@ -15,8 +15,8 @@ export interface SpotifyOptions {
 
 
 export interface SpotifyAccessTokenAPIResult {
-    access_token?: string;
-    expires_in: number;
+  access_token?: string;
+  expires_in: number;
 }
 
 export type loadType = "TRACK_LOADED" | "PLAYLIST_LOADED" | "SEARCH_RESULT" | "NO_MATCHES" | "LOAD_FAILED"
@@ -45,14 +45,124 @@ export interface SpotifyUser {
   uri: string,
 }
 
+export interface SpotifySearchTrack {
+  href: string,
+  items: object[],
+  limit: number,
+  next: string,
+  offset: string,
+  previous: string,
+  total: number
+}
+
+export interface SpotifyTrack {
+  album: spotifyAlbum & { album_group?: string, artists: Omit<SpotifyArtist, "followers" | "images" | "genres" | "popularity"> },
+  artists: SpotifyArtist[],
+  available_markets: string[],
+  disc_number: number,
+  duration_ms: number,
+  explicit: boolean,
+  external_ids: {
+    isrc: string,
+    ean: string,
+    upc: string,
+  },
+  external_urls: {
+    spotify: string
+  },
+  href: string,
+  id: string,
+  is_playable: boolean,
+
+  /**
+   * @description not adding types cause it's a big object
+   */
+  linked_from: object,
+  restrictions: {
+    reason: string
+  },
+  name: string,
+  popularity: number,
+  preview_url: string,
+  track_number: number,
+  type: "track",
+  uri: string,
+  is_local: boolean
+}
+
+export interface SpotifyArtist extends Omit<SpotifyUser, "display_name" | "type"> {
+  name: string,
+  genres: string[],
+  popularity: number,
+  type: "artist",
+  uri: string
+}
+
+export interface SpotifyPlaylist {
+  collaborative: boolean,
+  description: string | null,
+  external_urls: {
+    spotify: string,
+  },
+  followers: SpotifyFollower,
+  href: string,
+  id: string,
+  images: SpotifyImage[],
+  name: string,
+  owner: {
+    external_urls: {
+      spotify: string,
+    },
+    followers: SpotifyFollower,
+    href: string,
+    id: string,
+    type: "user",
+    uri: string,
+    display_name: string,
+  },
+  public: boolean,
+  snapshot_id: string,
+  tracks?: SpotifySearchTrack
+  type: "playlist",
+  uri: string
+}
+
+export interface spotifyAlbum {
+  album_type: string,
+  total_tracks: number,
+  available_markets: string[],
+  external_urls: {
+    spotify: string,
+  },
+  href: string,
+  id: string,
+  images: SpotifyImage[],
+  name: string,
+  release_date: string,
+  release_date_precision: string,
+  restrictions?: {
+    reason: string
+  },
+  type: "album",
+  uri: string,
+  artists: SpotifyArtist[],
+  tracks: SpotifySearchTrack,
+
+}
+
+export interface SpotifyRegularError {
+  status: number,
+  message: string
+}
+
 export class Spotify extends Plugin {
   private baseURL: string;
   private authorization: string;
-  private token:string
-  private interval:number;
-  public poru:Poru;
+  private token: string
+  private interval: number;
+  public poru: Poru;
   public options: SpotifyOptions;
-  private _search!: ({query,source,requester}:ResolveOptions)=> any;
+  private _search!: ({ query, source, requester }: ResolveOptions) => any;
 
 
   constructor(options: SpotifyOptions) {
@@ -72,19 +182,19 @@ export class Spotify extends Plugin {
 
 
 
-public check(url:string):boolean {
+  public check(url: string): boolean {
     return spotifyPattern.test(url);
   }
 
-public async load(poru:Poru){
+  public async load(poru: Poru) {
     this.poru = poru;
     this._search = poru.resolve.bind(poru);
     poru.resolve = this.resolve.bind(this);
-}
+  }
 
 
-async requestToken() {
- 
+  async requestToken() {
+
     try {
       const data = await fetch(
         "https://accounts.spotify.com/api/token?grant_type=client_credentials",
@@ -101,7 +211,7 @@ async requestToken() {
 
       this.token = `Bearer ${body.access_token}`;
       this.interval = body.expires_in * 1000;
-    } catch (e:any) {
+    } catch (e: any) {
       if (e.status === 400) {
         throw new Error("Spotify Plugin has been rate limited");
       }
@@ -114,7 +224,7 @@ async requestToken() {
     }
   }
 
-  public async requestData(endpoint:string) {
+  public async requestData(endpoint: string) {
     await this.renew();
 
     const req = await fetch(`${this.baseURL}${/^\//.test(endpoint) ? endpoint : `/${endpoint}`}`,
@@ -131,44 +241,44 @@ async requestToken() {
 
 
 
-public async resolve({query,source,requester}:ResolveOptions){
+  public async resolve({ query, source, requester }: ResolveOptions) {
 
     if (!this.token) await this.requestToken();
-    if(source ==="spotify"&& !this.check(query)) return this.fetch(query,requester);
+    if (source === "spotify" && !this.check(query)) return this.fetch(query, requester);
 
     const data = spotifyPattern.exec(query) ?? [];
-    const id:string = data[2];
+    const id: string = data[2];
     switch (data[1]) {
       case "playlist": {
-        return this.fetchPlaylist(id,requester);
+        return this.fetchPlaylist(id, requester);
       }
       case "track": {
-        return this.fetchTrack(id,requester);
+        return this.fetchTrack(id, requester);
       }
       case "album": {
-        return this.fetchAlbum(id,requester);
+        return this.fetchAlbum(id, requester);
       }
       case "artist": {
-        return this.fetchArtist(id,requester);
+        return this.fetchArtist(id, requester);
       }
     }
 
 
-}
-async fetchPlaylist(id: string,requester:any) {
+  }
+  async fetchPlaylist(id: string, requester: any) {
     try {
-      const playlist:any = await this.requestData(`/playlists/${id}`);
+      const playlist = await this.requestData(`/playlists/${id}`) as SpotifyPlaylist;
       await this.fetchPlaylistTracks(playlist);
 
       const limitedTracks = this.options.playlistLimit
-        ? playlist.tracks.items.slice(0, this.options.playlistLimit): playlist.tracks.items;
+        ? playlist.tracks.items.slice(0, this.options.playlistLimit) : playlist.tracks.items;
 
       const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x:any) => this.buildUnresolved(x.track,requester))
+        limitedTracks.map((x: any) => this.buildUnresolved(x.track, requester))
       );
 
-      return this.buildResponse("PLAYLIST_LOADED",unresolvedPlaylistTracks,playlist.name);
-    } catch (e:any) {
+      return this.buildResponse("PLAYLIST_LOADED", unresolvedPlaylistTracks, playlist.name);
+    } catch (e: any) {
       return this.buildResponse(
         e.status === 404 ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -178,23 +288,23 @@ async fetchPlaylist(id: string,requester:any) {
     }
   }
 
-  async fetchAlbum(id:string,requester:any) {
+  async fetchAlbum(id: string, requester: any) {
     try {
-      const album:any = await this.requestData(`/albums/${id}`);
+      const album = await this.requestData(`/albums/${id}`) as spotifyAlbum;
 
       const limitedTracks = this.options.albumLimit
         ? album.tracks.items.slice(0, this.options.albumLimit * 100)
         : album.tracks.items;
 
       const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x:any) => this.buildUnresolved(x,requester))
+        limitedTracks.map((x: any) => this.buildUnresolved(x, requester))
       );
       return this.buildResponse(
         "PLAYLIST_LOADED",
         unresolvedPlaylistTracks,
         album.name
       );
-    } catch (e:any) {
+    } catch (e: any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -204,20 +314,20 @@ async fetchPlaylist(id: string,requester:any) {
     }
   }
 
-  async fetchArtist(id: string,requester:any) {
+  async fetchArtist(id: string, requester: any) {
     try {
-      const artist:any = await this.requestData(`/artists/${id}`);
+      const artist = await this.requestData(`/artists/${id}`) as SpotifyArtist;
 
-      const data:any = await this.requestData(
+      const data = await this.requestData(
         `/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`
-      );
+      ) as { tracks: SpotifyTrack[] };
 
       const limitedTracks = this.options.artistLimit
         ? data.tracks.slice(0, this.options.artistLimit * 100)
         : data.tracks;
 
       const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x:any) => this.buildUnresolved(x,requester))
+        limitedTracks.map((x: any) => this.buildUnresolved(x, requester))
       );
 
       return this.buildResponse(
@@ -225,7 +335,7 @@ async fetchPlaylist(id: string,requester:any) {
         unresolvedPlaylistTracks,
         artist.name
       );
-    } catch (e:any) {
+    } catch (e: any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -235,13 +345,13 @@ async fetchPlaylist(id: string,requester:any) {
     }
   }
 
-  async fetchTrack(id: string,requester:any) {
+  async fetchTrack(id: string, requester: any) {
     try {
-      const data = await this.requestData(`/tracks/${id}`);
-      const unresolvedTrack = await this.buildUnresolved(data,requester);
+      const data = await this.requestData(`/tracks/${id}`) as SpotifyTrack;
+      const unresolvedTrack = await this.buildUnresolved(data, requester);
 
       return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
-    } catch (e:any) {
+    } catch (e: any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -251,20 +361,20 @@ async fetchPlaylist(id: string,requester:any) {
     }
   }
 
-  async fetch(query:string,requester:any) {
+  async fetch(query: string, requester: any) {
     try {
-      if (this.check(query)) return this.resolve({query,source:this.poru.options.defaultPlatform,requester});
+      if (this.check(query)) return this.resolve({ query, source: this.poru.options.defaultPlatform, requester });
 
-      const data:any = await this.requestData(
-        `/search/?q="${query}"&type=artist,album,track&market=${
-          this.options.searchMarket ?? "US"
+      const data: any = await this.requestData(
+        `/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"
         }`
       );
+
       const unresolvedTracks = await Promise.all(
-        data.tracks.items.map((x:any) => this.buildUnresolved(x,requester))
+        data.tracks.items.map((x: any) => this.buildUnresolved(x, requester))
       );
       return this.buildResponse("TRACK_LOADED", unresolvedTracks);
-    } catch (e:any) {
+    } catch (e: any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
         [],
@@ -275,7 +385,7 @@ async fetchPlaylist(id: string,requester:any) {
   }
 
 
-  async fetchPlaylistTracks(spotifyPlaylist:any) {
+  async fetchPlaylistTracks(spotifyPlaylist: SpotifyPlaylist) {
     let nextPage = spotifyPlaylist.tracks.next;
     let pageLoaded = 1;
     while (nextPage) {
@@ -283,7 +393,7 @@ async fetchPlaylist(id: string,requester:any) {
       const req = await fetch(nextPage, {
         headers: { Authorization: this.token },
       });
-      const body:any = await req.json();
+      const body: any = await req.json();
       if (body.error) break;
       spotifyPlaylist.tracks.items.push(...body.items);
 
@@ -292,9 +402,9 @@ async fetchPlaylist(id: string,requester:any) {
     }
   }
 
-  async buildUnresolved(track:any,requester:any) {
+  async buildUnresolved(track: any, requester: any) {
     if (!track) throw new ReferenceError("The Spotify track object was not provided");
-    
+
 
     return new Track({
       track: "",
@@ -313,15 +423,15 @@ async fetchPlaylist(id: string,requester:any) {
     });
   }
 
- 
- 
-  compareValue(value:boolean) {
+
+
+  compareValue(value: boolean) {
     return typeof value !== "undefined"
       ? value !== null
       : typeof value !== "undefined";
   }
 
-  buildResponse(loadType:loadType, tracks:any, playlistName? :string, exceptionMsg?:string) {
+  buildResponse(loadType: loadType, tracks: any, playlistName?: string, exceptionMsg?: string) {
     return Object.assign(
       {
         loadType,
