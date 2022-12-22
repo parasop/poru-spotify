@@ -1,7 +1,5 @@
 import { fetch, Request } from "undici";
-//import { trackInfo } from "poru/src/guild/Track";
 import { Plugin, Poru, ResolveOptions, Track } from "poru";
-import exp from "constants";
 let spotifyPattern =
   /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 export interface SpotifyOptions {
@@ -162,7 +160,7 @@ export class Spotify extends Plugin {
   private interval: number;
   public poru: Poru;
   public options: SpotifyOptions;
-  private _search!: ({ query, source, requester }: ResolveOptions) => any;
+  private _resolve!: ({ query, source, requester }: ResolveOptions) => any;
 
 
   constructor(options: SpotifyOptions) {
@@ -188,7 +186,7 @@ export class Spotify extends Plugin {
 
   public async load(poru: Poru) {
     this.poru = poru;
-    this._search = poru.resolve.bind(poru);
+    this._resolve = poru.resolve.bind(poru);
     poru.resolve = this.resolve.bind(this);
   }
 
@@ -260,6 +258,10 @@ export class Spotify extends Plugin {
       }
       case "artist": {
         return this.fetchArtist(id, requester);
+      }
+      default :
+      {
+        return this._resolve({query,source:this.poru.options.defaultPlatform,requester:requester})
       }
     }
 

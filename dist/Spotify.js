@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Spotify = void 0;
 const undici_1 = require("undici");
-//import { trackInfo } from "poru/src/guild/Track";
 const poru_1 = require("poru");
 let spotifyPattern = /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 class Spotify extends poru_1.Plugin {
@@ -12,7 +11,7 @@ class Spotify extends poru_1.Plugin {
     interval;
     poru;
     options;
-    _search;
+    _resolve;
     constructor(options) {
         super("Spotify");
         this.baseURL = "https://api.spotify.com/v1";
@@ -32,7 +31,7 @@ class Spotify extends poru_1.Plugin {
     }
     async load(poru) {
         this.poru = poru;
-        this._search = poru.resolve.bind(poru);
+        this._resolve = poru.resolve.bind(poru);
         poru.resolve = this.resolve.bind(this);
     }
     async requestToken() {
@@ -87,6 +86,10 @@ class Spotify extends poru_1.Plugin {
             case "artist": {
                 return this.fetchArtist(id, requester);
             }
+            default:
+                {
+                    return this._resolve({ query, source: this.poru.options.defaultPlatform, requester: requester });
+                }
         }
     }
     async fetchPlaylist(id, requester) {

@@ -134,6 +134,10 @@ export interface spotifyAlbum {
     artists: SpotifyArtist[];
     tracks: SpotifySearchTrack;
 }
+export interface SpotifyRegularError {
+    status: number;
+    message: string;
+}
 export declare class Spotify extends Plugin {
     private baseURL;
     private authorization;
@@ -141,7 +145,7 @@ export declare class Spotify extends Plugin {
     private interval;
     poru: Poru;
     options: SpotifyOptions;
-    private _search;
+    private _resolve;
     constructor(options: SpotifyOptions);
     check(url: string): boolean;
     load(poru: Poru): Promise<void>;
