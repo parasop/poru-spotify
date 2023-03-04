@@ -1,13 +1,17 @@
 import { fetch, Request } from "undici";
 import { Plugin, Poru, ResolveOptions, Track } from "poru";
+import {SpotifyManager} from "./spotifyManager"
 let spotifyPattern =
   /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
+
+
 export interface SpotifyOptions {
-  clientID: string;
-  clientSecret: string;
+  clientID?: string;
+  clientSecret?: string;
+  clients?: { clientID: string; clientSecret: string }[];
   playlistLimit?: number;
   albumLimit?: number;
-  artistLimit?: number;
+  searchLimit?: number;
   searchMarket?: string;
 }
 
@@ -161,16 +165,16 @@ export class Spotify extends Plugin {
   public poru: Poru;
   public options: SpotifyOptions;
   private _resolve!: ({ query, source, requester }: ResolveOptions) => any;
-
+  public spotifyManager:SpotifyManager
 
   constructor(options: SpotifyOptions) {
     super("Spotify");
     this.baseURL = "https://api.spotify.com/v1";
+    this.spotifyManager = new SpotifyManager(options);
     this.authorization = Buffer.from(`${options.clientID}:${options.clientSecret}`).toString("base64");
     this.options = {
       playlistLimit: options.playlistLimit,
       albumLimit: options.albumLimit,
-      artistLimit: options.artistLimit,
       searchMarket: options.searchMarket,
       clientID: options.clientID,
       clientSecret: options.clientSecret,
@@ -269,7 +273,7 @@ export class Spotify extends Plugin {
   }
   async fetchPlaylist(id: string, requester: any) {
     try {
-      const playlist = await this.requestData(`/playlists/${id}`) as SpotifyPlaylist;
+      const playlist = await this.spotifyManager.send(`/playlists/${id}`) as SpotifyPlaylist;
       await this.fetchPlaylistTracks(playlist);
 
       const limitedTracks = this.options.playlistLimit
@@ -292,7 +296,7 @@ export class Spotify extends Plugin {
 
   async fetchAlbum(id: string, requester: any) {
     try {
-      const album = await this.requestData(`/albums/${id}`) as spotifyAlbum;
+      const album = await this.spotifyManager.send(`/albums/${id}`) as spotifyAlbum;
 
       const limitedTracks = this.options.albumLimit
         ? album.tracks.items.slice(0, this.options.albumLimit * 100)
@@ -318,18 +322,15 @@ export class Spotify extends Plugin {
 
   async fetchArtist(id: string, requester: any) {
     try {
-      const artist = await this.requestData(`/artists/${id}`) as SpotifyArtist;
+      const artist = await this.spotifyManager.send(`/artists/${id}`) as SpotifyArtist;
 
       const data = await this.requestData(
         `/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`
       ) as { tracks: SpotifyTrack[] };
 
-      const limitedTracks = this.options.artistLimit
-        ? data.tracks.slice(0, this.options.artistLimit * 100)
-        : data.tracks;
-
+     
       const unresolvedPlaylistTracks = await Promise.all(
-        limitedTracks.map((x: any) => this.buildUnresolved(x, requester))
+        data.tracks.map((x: any) => this.buildUnresolved(x, requester))
       );
 
       return this.buildResponse(
@@ -349,7 +350,7 @@ export class Spotify extends Plugin {
 
   async fetchTrack(id: string, requester: any) {
     try {
-      const data = await this.requestData(`/tracks/${id}`) as SpotifyTrack;
+      const data = await this.spotifyManager.send(`/tracks/${id}`) as SpotifyTrack;
       const unresolvedTrack = await this.buildUnresolved(data, requester);
 
       return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
