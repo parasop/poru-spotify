@@ -1,9 +1,8 @@
 import { fetch, Request } from "undici";
 import { Plugin, Poru, ResolveOptions, Track } from "poru";
-import {SpotifyManager} from "./spotifyManager"
-let spotifyPattern =
-  /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
-
+import { SpotifyManager } from "./spotifyManager"
+const spotifyPattern =
+  /^(?:https:\/\/open\.spotify\.com\/(?:intl-\w+\/)?(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 
 export interface SpotifyOptions {
   clientID?: string;
@@ -165,7 +164,7 @@ export class Spotify extends Plugin {
   public poru: Poru;
   public options: SpotifyOptions;
   private _resolve!: ({ query, source, requester }: ResolveOptions) => any;
-  public spotifyManager:SpotifyManager
+  public spotifyManager: SpotifyManager
 
   constructor(options: SpotifyOptions) {
     super("Spotify");
@@ -263,10 +262,10 @@ export class Spotify extends Plugin {
       case "artist": {
         return this.fetchArtist(id, requester);
       }
-      default :
-      {
-        return this._resolve({query,source:this.poru.options.defaultPlatform,requester:requester})
-      }
+      default:
+        {
+          return this._resolve({ query, source: this.poru.options.defaultPlatform, requester: requester })
+        }
     }
 
 
@@ -328,7 +327,7 @@ export class Spotify extends Plugin {
         `/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`
       ) as { tracks: SpotifyTrack[] };
 
-     
+
       const unresolvedPlaylistTracks = await Promise.all(
         data.tracks.map((x: any) => this.buildUnresolved(x, requester))
       );
