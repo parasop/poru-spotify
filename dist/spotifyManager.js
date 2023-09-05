@@ -7,9 +7,10 @@ class SpotifyManager {
     mode = 'single';
     manager;
     constructor(data) {
+        this.manager = [];
         if (data.clients.length) {
             for (const client of data.clients)
-                this.manager.push(new RestManager_1.RestManager(client));
+                this.manager?.push(new RestManager_1.RestManager(client));
             this.mode = 'multiple';
         }
         else {

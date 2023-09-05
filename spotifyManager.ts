@@ -6,9 +6,9 @@ export class SpotifyManager {
    private manager : RestManager[];
 
    constructor(data:SpotifyOptions){
-
+        this.manager =[]
        if(data.clients.length){
-       for (const client of data.clients) this.manager.push(new RestManager(client));
+       for (const client of data.clients) this.manager?.push(new RestManager(client));
            this.mode = 'multiple';
        } else {
            this.manager.push(new RestManager({ clientID: data.clientID, clientSecret: data.clientSecret }));
