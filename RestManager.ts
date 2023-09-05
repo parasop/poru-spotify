@@ -18,6 +18,7 @@ export class RestManager {
 
     this.options = options
     this.authorization = `Basic ${Buffer.from(`${options.clientID}:${options.clientSecret}`).toString('base64',)}`;
+    this.refreshToken();
 
   }
 
@@ -73,7 +74,7 @@ export class RestManager {
         {
           method: "POST",
           headers: {
-            Authorization: `Basic ${this.authorization}`,
+            Authorization: `${this.authorization}`,
             "Content-Type": "application/x-www-form-urlencoded",
           },
         }

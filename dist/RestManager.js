@@ -11,6 +11,7 @@ class RestManager {
     constructor(options) {
         this.options = options;
         this.authorization = `Basic ${Buffer.from(`${options.clientID}:${options.clientSecret}`).toString('base64')}`;
+        this.refreshToken();
     }
     async request(endpoint) {
         this.renew();
@@ -49,7 +50,7 @@ class RestManager {
             const req = await (0, undici_1.fetch)("https://accounts.spotify.com/api/token?grant_type=client_credentials", {
                 method: "POST",
                 headers: {
-                    Authorization: `Basic ${this.authorization}`,
+                    Authorization: `${this.authorization}`,
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
             });
