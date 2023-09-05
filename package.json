@@ -30,11 +30,12 @@
   },
   "homepage": "https://github.com/parasop/poru-spotify#readme",
   "dependencies": {
-    "poru": "github:parasop/poru#v4",
-    "undici": "^5.14.0"
+    "poru": "^4.2.2",
+    "typescript": "^5.2.2",
+    "undici": "^5.23.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.17",
+    "@types/node": "^18.17.14",
     "gen-esm-wrapper": "^1.1.3"
   }
 }

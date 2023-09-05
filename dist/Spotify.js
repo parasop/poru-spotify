@@ -3,7 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Spotify = void 0;
 const undici_1 = require("undici");
 const poru_1 = require("poru");
-let spotifyPattern = /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
+const spotifyManager_1 = require("./spotifyManager");
+const spotifyPattern = /^(?:https:\/\/open\.spotify\.com\/(?:intl-\w+\/)?(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 class Spotify extends poru_1.Plugin {
     baseURL;
     authorization;
@@ -12,14 +13,15 @@ class Spotify extends poru_1.Plugin {
     poru;
     options;
     _resolve;
+    spotifyManager;
     constructor(options) {
         super("Spotify");
         this.baseURL = "https://api.spotify.com/v1";
+        this.spotifyManager = new spotifyManager_1.SpotifyManager(options);
         this.authorization = Buffer.from(`${options.clientID}:${options.clientSecret}`).toString("base64");
         this.options = {
             playlistLimit: options.playlistLimit,
             albumLimit: options.albumLimit,
-            artistLimit: options.artistLimit,
             searchMarket: options.searchMarket,
             clientID: options.clientID,
             clientSecret: options.clientSecret,
@@ -94,7 +96,7 @@ class Spotify extends poru_1.Plugin {
     }
     async fetchPlaylist(id, requester) {
         try {
-            const playlist = await this.requestData(`/playlists/${id}`);
+            const playlist = await this.spotifyManager.send(`/playlists/${id}`);
             await this.fetchPlaylistTracks(playlist);
             const limitedTracks = this.options.playlistLimit
                 ? playlist.tracks.items.slice(0, this.options.playlistLimit) : playlist.tracks.items;
@@ -107,7 +109,7 @@ class Spotify extends poru_1.Plugin {
     }
     async fetchAlbum(id, requester) {
         try {
-            const album = await this.requestData(`/albums/${id}`);
+            const album = await this.spotifyManager.send(`/albums/${id}`);
             const limitedTracks = this.options.albumLimit
                 ? album.tracks.items.slice(0, this.options.albumLimit * 100)
                 : album.tracks.items;
@@ -120,12 +122,9 @@ class Spotify extends poru_1.Plugin {
     }
     async fetchArtist(id, requester) {
         try {
-            const artist = await this.requestData(`/artists/${id}`);
-            const data = await this.requestData(`/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`);
-            const limitedTracks = this.options.artistLimit
-                ? data.tracks.slice(0, this.options.artistLimit * 100)
-                : data.tracks;
-            const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map((x) => this.buildUnresolved(x, requester)));
+            const artist = await this.spotifyManager.send(`/artists/${id}`);
+            const data = await this.spotifyManager.send(`/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`);
+            const unresolvedPlaylistTracks = await Promise.all(data.tracks.map((x) => this.buildUnresolved(x, requester)));
             return this.buildResponse("PLAYLIST_LOADED", unresolvedPlaylistTracks, artist.name);
         }
         catch (e) {
@@ -134,7 +133,7 @@ class Spotify extends poru_1.Plugin {
     }
     async fetchTrack(id, requester) {
         try {
-            const data = await this.requestData(`/tracks/${id}`);
+            const data = await this.spotifyManager.send(`/tracks/${id}`);
             const unresolvedTrack = await this.buildUnresolved(data, requester);
             return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
         }
@@ -146,7 +145,7 @@ class Spotify extends poru_1.Plugin {
         try {
             if (this.check(query))
                 return this.resolve({ query, source: this.poru.options.defaultPlatform, requester });
-            const data = await this.requestData(`/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"}`);
+            const data = await this.spotifyManager.send(`/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"}`);
             const unresolvedTracks = await Promise.all(data.tracks.items.map((x) => this.buildUnresolved(x, requester)));
             return this.buildResponse("TRACK_LOADED", unresolvedTracks);
         }
@@ -160,10 +159,7 @@ class Spotify extends poru_1.Plugin {
         while (nextPage) {
             if (!nextPage)
                 break;
-            const req = await (0, undici_1.fetch)(nextPage, {
-                headers: { Authorization: this.token },
-            });
-            const body = await req.json();
+            const body = await this.spotifyManager.getData(nextPage);
             if (body.error)
                 break;
             spotifyPlaylist.tracks.items.push(...body.items);

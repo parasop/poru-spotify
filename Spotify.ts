@@ -323,7 +323,7 @@ export class Spotify extends Plugin {
     try {
       const artist = await this.spotifyManager.send(`/artists/${id}`) as SpotifyArtist;
 
-      const data = await this.requestData(
+      const data = await this.spotifyManager.send(
         `/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`
       ) as { tracks: SpotifyTrack[] };
 
@@ -367,7 +367,7 @@ export class Spotify extends Plugin {
     try {
       if (this.check(query)) return this.resolve({ query, source: this.poru.options.defaultPlatform, requester });
 
-      const data: any = await this.requestData(
+      const data: any = await this.spotifyManager.send(
         `/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"
         }`
       );
@@ -392,10 +392,7 @@ export class Spotify extends Plugin {
     let pageLoaded = 1;
     while (nextPage) {
       if (!nextPage) break;
-      const req = await fetch(nextPage, {
-        headers: { Authorization: this.token },
-      });
-      const body: any = await req.json();
+      const body: any = await this.spotifyManager.getData(nextPage);
       if (body.error) break;
       spotifyPlaylist.tracks.items.push(...body.items);
 

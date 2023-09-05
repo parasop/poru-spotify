@@ -39,6 +39,26 @@ export class RestManager {
     return data;
   }
 
+
+  public async getData<T>(url: string): Promise<T> {
+    this.renew();
+    const req = await fetch(url,
+      {
+        headers: { Authorization: this.token },
+      })
+    const data = (await req.json()) as Promise<T>;
+
+    if (req.headers.get('x-ratelimit-remaining') === '0') {
+      this.handleRateLimited(Number(req.headers.get('x-ratelimit-reset')) * 1000);
+      throw new Error('[Poru Spotify] currently we got rate limited by spotify!')
+    }
+    this.stats.requests++;
+
+    return data;
+  }
+
+
+
   private handleRateLimited(time: number): void {
     this.stats.isRateLimited = true;
     setTimeout(() => {

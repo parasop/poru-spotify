@@ -1,10 +1,15 @@
 import { Plugin, Poru, ResolveOptions, Track } from "poru";
+import { SpotifyManager } from "./spotifyManager";
 export interface SpotifyOptions {
-    clientID: string;
-    clientSecret: string;
+    clientID?: string;
+    clientSecret?: string;
+    clients?: {
+        clientID: string;
+        clientSecret: string;
+    }[];
     playlistLimit?: number;
     albumLimit?: number;
-    artistLimit?: number;
+    searchLimit?: number;
     searchMarket?: string;
 }
 export interface SpotifyAccessTokenAPIResult {
@@ -146,6 +151,7 @@ export declare class Spotify extends Plugin {
     poru: Poru;
     options: SpotifyOptions;
     private _resolve;
+    spotifyManager: SpotifyManager;
     constructor(options: SpotifyOptions);
     check(url: string): boolean;
     load(poru: Poru): Promise<void>;
