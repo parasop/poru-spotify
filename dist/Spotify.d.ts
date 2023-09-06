@@ -159,6 +159,7 @@ export declare class Spotify extends Plugin {
     renew(): Promise<void>;
     requestData(endpoint: string): Promise<unknown>;
     resolve({ query, source, requester }: ResolveOptions): any;
+    decodeSpotifyShortLink({ query, source, requester }: ResolveOptions): any;
     fetchPlaylist(id: string, requester: any): Promise<{
         loadType: loadType;
         tracks: any;

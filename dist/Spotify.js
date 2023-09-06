@@ -1,10 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Spotify = void 0;
 const undici_1 = require("undici");
+const cheerio_1 = __importDefault(require("cheerio"));
 const poru_1 = require("poru");
 const spotifyManager_1 = require("./spotifyManager");
 const spotifyPattern = /^(?:https:\/\/open\.spotify\.com\/(?:intl-\w+\/)?(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
+const SHORT_LINK_PATTERN = "https://spotify.link";
 class Spotify extends poru_1.Plugin {
     baseURL;
     authorization;
@@ -45,7 +50,7 @@ class Spotify extends poru_1.Plugin {
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
             });
-            const body = await data.json();
+            const body = (await data.json());
             this.token = `Bearer ${body.access_token}`;
             this.interval = body.expires_in * 1000;
         }
@@ -71,6 +76,8 @@ class Spotify extends poru_1.Plugin {
     async resolve({ query, source, requester }) {
         if (!this.token)
             await this.requestToken();
+        if (query.startsWith(SHORT_LINK_PATTERN))
+            return this.decodeSpotifyShortLink({ query, source, requester });
         if (source === "spotify" && !this.check(query))
             return this.fetch(query, requester);
         const data = spotifyPattern.exec(query) ?? [];
@@ -88,18 +95,30 @@ class Spotify extends poru_1.Plugin {
             case "artist": {
                 return this.fetchArtist(id, requester);
             }
-            default:
-                {
-                    return this._resolve({ query, source: this.poru.options.defaultPlatform, requester: requester });
-                }
+            default: {
+                return this._resolve({
+                    query,
+                    source: this.poru.options.defaultPlatform,
+                    requester: requester,
+                });
+            }
         }
+    }
+    async decodeSpotifyShortLink({ query, source, requester }) {
+        let res = await (0, undici_1.fetch)(query, { method: "GET" });
+        const text = await res.text();
+        const $ = cheerio_1.default.load(text);
+        const spotifyLink = $("a.secondary-action");
+        const spotifyUrl = spotifyLink.attr("href");
+        return this.resolve({ query: spotifyUrl, source, requester });
     }
     async fetchPlaylist(id, requester) {
         try {
-            const playlist = await this.spotifyManager.send(`/playlists/${id}`);
+            const playlist = (await this.spotifyManager.send(`/playlists/${id}`));
             await this.fetchPlaylistTracks(playlist);
             const limitedTracks = this.options.playlistLimit
-                ? playlist.tracks.items.slice(0, this.options.playlistLimit) : playlist.tracks.items;
+                ? playlist.tracks.items.slice(0, this.options.playlistLimit)
+                : playlist.tracks.items;
             const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map((x) => this.buildUnresolved(x.track, requester)));
             return this.buildResponse("PLAYLIST_LOADED", unresolvedPlaylistTracks, playlist.name);
         }
@@ -109,7 +128,7 @@ class Spotify extends poru_1.Plugin {
     }
     async fetchAlbum(id, requester) {
         try {
-            const album = await this.spotifyManager.send(`/albums/${id}`);
+            const album = (await this.spotifyManager.send(`/albums/${id}`));
             const limitedTracks = this.options.albumLimit
                 ? album.tracks.items.slice(0, this.options.albumLimit * 100)
                 : album.tracks.items;
@@ -122,8 +141,8 @@ class Spotify extends poru_1.Plugin {
     }
     async fetchArtist(id, requester) {
         try {
-            const artist = await this.spotifyManager.send(`/artists/${id}`);
-            const data = await this.spotifyManager.send(`/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`);
+            const artist = (await this.spotifyManager.send(`/artists/${id}`));
+            const data = (await this.spotifyManager.send(`/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`));
             const unresolvedPlaylistTracks = await Promise.all(data.tracks.map((x) => this.buildUnresolved(x, requester)));
             return this.buildResponse("PLAYLIST_LOADED", unresolvedPlaylistTracks, artist.name);
         }
@@ -133,7 +152,7 @@ class Spotify extends poru_1.Plugin {
     }
     async fetchTrack(id, requester) {
         try {
-            const data = await this.spotifyManager.send(`/tracks/${id}`);
+            const data = (await this.spotifyManager.send(`/tracks/${id}`));
             const unresolvedTrack = await this.buildUnresolved(data, requester);
             return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
         }
@@ -144,7 +163,11 @@ class Spotify extends poru_1.Plugin {
     async fetch(query, requester) {
         try {
             if (this.check(query))
-                return this.resolve({ query, source: this.poru.options.defaultPlatform, requester });
+                return this.resolve({
+                    query,
+                    source: this.poru.options.defaultPlatform,
+                    requester,
+                });
             const data = await this.spotifyManager.send(`/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"}`);
             const unresolvedTracks = await Promise.all(data.tracks.items.map((x) => this.buildUnresolved(x, requester)));
             return this.buildResponse("TRACK_LOADED", unresolvedTracks);
@@ -182,7 +205,7 @@ class Spotify extends poru_1.Plugin {
                 title: track.name,
                 uri: `https://open.spotify.com/track/${track.id}`,
                 image: track.album?.images[0]?.url,
-                requester
+                requester,
             },
         });
     }
