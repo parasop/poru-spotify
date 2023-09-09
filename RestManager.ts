@@ -86,8 +86,8 @@ export class RestManager {
       };
       if (!access_token) throw new Error("[Poru Spotify] failed to fetch access token from spotify api")
       this.token = `Bearer ${access_token}`;
-      this.stats.nextRenew = expires_in * 1000;
-    } catch (e: any) {
+      this.stats.nextRenew = new Date().getTime() + expires_in * 1000;
+     } catch (e: any) {
       if (e.status === 400) {
         throw new Error("Spotify Plugin has been rate limited");
       }
@@ -95,6 +95,7 @@ export class RestManager {
 
   }
 
+  
   private async renew(): Promise<void> {
     if (Date.now() >= this.stats.nextRenew) {
       await this.refreshToken();

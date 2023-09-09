@@ -58,7 +58,7 @@ class RestManager {
             if (!access_token)
                 throw new Error("[Poru Spotify] failed to fetch access token from spotify api");
             this.token = `Bearer ${access_token}`;
-            this.stats.nextRenew = expires_in * 1000;
+            this.stats.nextRenew = new Date().getTime() + expires_in * 1000;
         }
         catch (e) {
             if (e.status === 400) {
