@@ -205,9 +205,8 @@ class Spotify extends poru_1.Plugin {
                 title: track.name,
                 uri: `https://open.spotify.com/track/${track.id}`,
                 image: track.album?.images[0]?.url,
-                requester,
             },
-        });
+        }, requester);
     }
     compareValue(value) {
         return typeof value !== "undefined"

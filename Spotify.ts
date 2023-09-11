@@ -251,8 +251,10 @@ export class Spotify extends Plugin {
 
   public async resolve({ query, source, requester }: ResolveOptions) {
     if (!this.token) await this.requestToken();
-    if(query.startsWith(SHORT_LINK_PATTERN)) return this.decodeSpotifyShortLink({ query, source, requester })
-    if (source === "spotify" && !this.check(query))return this.fetch(query, requester);
+    if (query.startsWith(SHORT_LINK_PATTERN))
+      return this.decodeSpotifyShortLink({ query, source, requester });
+    if (source === "spotify" && !this.check(query))
+      return this.fetch(query, requester);
 
     const data = spotifyPattern.exec(query) ?? [];
     const id: string = data[2];
@@ -441,21 +443,23 @@ export class Spotify extends Plugin {
     if (!track)
       throw new ReferenceError("The Spotify track object was not provided");
 
-    return new Track({
-      track: "",
-      info: {
-        sourceName: "spotify",
-        identifier: track.id,
-        isSeekable: true,
-        author: track.artists[0]?.name || "Unknown Artist",
-        length: track.duration_ms,
-        isStream: false,
-        title: track.name,
-        uri: `https://open.spotify.com/track/${track.id}`,
-        image: track.album?.images[0]?.url,
-        requester,
+    return new Track(
+      {
+        track: "",
+        info: {
+          sourceName: "spotify",
+          identifier: track.id,
+          isSeekable: true,
+          author: track.artists[0]?.name || "Unknown Artist",
+          length: track.duration_ms,
+          isStream: false,
+          title: track.name,
+          uri: `https://open.spotify.com/track/${track.id}`,
+          image: track.album?.images[0]?.url,
+        },
       },
-    });
+      requester
+    );
   }
 
   compareValue(value: boolean) {
