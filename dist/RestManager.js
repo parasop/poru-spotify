@@ -14,7 +14,7 @@ class RestManager {
         this.refreshToken();
     }
     async request(endpoint) {
-        this.renew();
+        await this.renew();
         const req = await (0, undici_1.fetch)(`${SPOTIFY_API_URL}${endpoint}`, {
             headers: { Authorization: this.token },
         });
@@ -27,7 +27,7 @@ class RestManager {
         return data;
     }
     async getData(url) {
-        this.renew();
+        await this.renew();
         const req = await (0, undici_1.fetch)(url, {
             headers: { Authorization: this.token },
         });

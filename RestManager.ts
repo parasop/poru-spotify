@@ -23,7 +23,7 @@ export class RestManager {
   }
 
   public async request<T>(endpoint: string): Promise<T> {
-    this.renew();
+   await this.renew();
 
     const req = await fetch(`${SPOTIFY_API_URL}${endpoint}`,
       {
@@ -42,7 +42,7 @@ export class RestManager {
 
 
   public async getData<T>(url: string): Promise<T> {
-    this.renew();
+   await  this.renew();
     const req = await fetch(url,
       {
         headers: { Authorization: this.token },
