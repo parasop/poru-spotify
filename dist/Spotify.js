@@ -79,7 +79,7 @@ class Spotify extends poru_1.Plugin {
         if (query.startsWith(SHORT_LINK_PATTERN))
             return this.decodeSpotifyShortLink({ query, source, requester });
         if (source === "spotify" && !this.check(query))
-            return this.fetch(query, requester);
+            return this.fetch(query, source, requester);
         const data = spotifyPattern.exec(query) ?? [];
         const id = data[2];
         switch (data[1]) {
@@ -98,7 +98,7 @@ class Spotify extends poru_1.Plugin {
             default: {
                 return this._resolve({
                     query,
-                    source: this.poru.options.defaultPlatform,
+                    source: source ?? this.poru.options.defaultPlatform,
                     requester: requester,
                 });
             }
@@ -160,12 +160,12 @@ class Spotify extends poru_1.Plugin {
             return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
         }
     }
-    async fetch(query, requester) {
+    async fetch(query, source, requester) {
         try {
             if (this.check(query))
                 return this.resolve({
                     query,
-                    source: this.poru.options.defaultPlatform,
+                    source: source ?? this.poru.options.defaultPlatform,
                     requester,
                 });
             const data = await this.spotifyManager.send(`/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"}`);

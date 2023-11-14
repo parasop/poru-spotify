@@ -7,7 +7,7 @@ export class SpotifyManager {
 
    constructor(data:SpotifyOptions){
         this.manager =[]
-       if(data.clients.length){
+       if(data.clients?.length){
        for (const client of data.clients) this.manager?.push(new RestManager(client));
            this.mode = 'multiple';
        } else {
