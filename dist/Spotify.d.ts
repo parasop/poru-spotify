@@ -16,7 +16,7 @@ export interface SpotifyAccessTokenAPIResult {
     access_token?: string;
     expires_in: number;
 }
-export type loadType = "TRACK_LOADED" | "PLAYLIST_LOADED" | "SEARCH_RESULT" | "NO_MATCHES" | "LOAD_FAILED";
+export type loadType = "track" | "playlist" | "search" | "empty" | "error";
 export interface SpotifyFollower {
     href: string;
     total: number;
