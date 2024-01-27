@@ -307,7 +307,7 @@ export class Spotify extends Plugin {
       );
 
       return this.buildResponse(
-        "PLAYLIST_LOADED",
+        "playlist",
         unresolvedPlaylistTracks,
         playlist.name
       );
@@ -335,7 +335,7 @@ export class Spotify extends Plugin {
         limitedTracks.map((x: any) => this.buildUnresolved(x, requester))
       );
       return this.buildResponse(
-        "PLAYLIST_LOADED",
+        "playlist",
         unresolvedPlaylistTracks,
         album.name
       );
@@ -414,7 +414,7 @@ export class Spotify extends Plugin {
       const unresolvedTracks = await Promise.all(
         data.tracks.items.map((x: any) => this.buildUnresolved(x, requester))
       );
-      return this.buildResponse("TRACK_LOADED", unresolvedTracks);
+      return this.buildResponse("track", unresolvedTracks);
     } catch (e: any) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "empty" : "error",
