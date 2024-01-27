@@ -120,10 +120,10 @@ class Spotify extends poru_1.Plugin {
                 ? playlist.tracks.items.slice(0, this.options.playlistLimit)
                 : playlist.tracks.items;
             const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map((x) => this.buildUnresolved(x.track, requester)));
-            return this.buildResponse("PLAYLIST_LOADED", unresolvedPlaylistTracks, playlist.name);
+            return this.buildResponse("playlist", unresolvedPlaylistTracks, playlist.name);
         }
         catch (e) {
-            return this.buildResponse(e.status === 404 ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+            return this.buildResponse(e.status === 404 ? "empty" : "error", [], undefined, e.body?.error.message ?? e.message);
         }
     }
     async fetchAlbum(id, requester) {
@@ -133,10 +133,10 @@ class Spotify extends poru_1.Plugin {
                 ? album.tracks.items.slice(0, this.options.albumLimit * 100)
                 : album.tracks.items;
             const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map((x) => this.buildUnresolved(x, requester)));
-            return this.buildResponse("PLAYLIST_LOADED", unresolvedPlaylistTracks, album.name);
+            return this.buildResponse("playlist", unresolvedPlaylistTracks, album.name);
         }
         catch (e) {
-            return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+            return this.buildResponse(e.body?.error.message === "invalid id" ? "empty" : "error", [], undefined, e.body?.error.message ?? e.message);
         }
     }
     async fetchArtist(id, requester) {
@@ -144,20 +144,20 @@ class Spotify extends poru_1.Plugin {
             const artist = (await this.spotifyManager.send(`/artists/${id}`));
             const data = (await this.spotifyManager.send(`/artists/${id}/top-tracks?market=${this.options.searchMarket ?? "US"}`));
             const unresolvedPlaylistTracks = await Promise.all(data.tracks.map((x) => this.buildUnresolved(x, requester)));
-            return this.buildResponse("PLAYLIST_LOADED", unresolvedPlaylistTracks, artist.name);
+            return this.buildResponse("playlist", unresolvedPlaylistTracks, artist.name);
         }
         catch (e) {
-            return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+            return this.buildResponse(e.body?.error.message === "invalid id" ? "empty" : "error", [], undefined, e.body?.error.message ?? e.message);
         }
     }
     async fetchTrack(id, requester) {
         try {
             const data = (await this.spotifyManager.send(`/tracks/${id}`));
             const unresolvedTrack = await this.buildUnresolved(data, requester);
-            return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
+            return this.buildResponse("track", [unresolvedTrack]);
         }
         catch (e) {
-            return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+            return this.buildResponse(e.body?.error.message === "invalid id" ? "empty" : "error", [], undefined, e.body?.error.message ?? e.message);
         }
     }
     async fetch(query, source, requester) {
@@ -170,10 +170,10 @@ class Spotify extends poru_1.Plugin {
                 });
             const data = await this.spotifyManager.send(`/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"}`);
             const unresolvedTracks = await Promise.all(data.tracks.items.map((x) => this.buildUnresolved(x, requester)));
-            return this.buildResponse("TRACK_LOADED", unresolvedTracks);
+            return this.buildResponse("track", unresolvedTracks);
         }
         catch (e) {
-            return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+            return this.buildResponse(e.body?.error.message === "invalid id" ? "empty" : "error", [], undefined, e.body?.error.message ?? e.message);
         }
     }
     async fetchPlaylistTracks(spotifyPlaylist) {
