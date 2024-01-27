@@ -23,11 +23,11 @@ export interface SpotifyAccessTokenAPIResult {
 }
 
 export type loadType =
-  | "TRACK_LOADED"
-  | "PLAYLIST_LOADED"
-  | "SEARCH_RESULT"
-  | "NO_MATCHES"
-  | "LOAD_FAILED";
+  | "track"
+  | "playlist"
+  | "search"
+  | "empty"
+  | "error";
 
 export interface SpotifyFollower {
   href: string;
@@ -307,13 +307,13 @@ export class Spotify extends Plugin {
       );
 
       return this.buildResponse(
-        "PLAYLIST_LOADED",
+        "playlist",
         unresolvedPlaylistTracks,
         playlist.name
       );
     } catch (e: any) {
       return this.buildResponse(
-        e.status === 404 ? "NO_MATCHES" : "LOAD_FAILED",
+        e.status === 404 ? "empty" : "error",
         [],
         undefined,
         e.body?.error.message ?? e.message
@@ -335,13 +335,13 @@ export class Spotify extends Plugin {
         limitedTracks.map((x: any) => this.buildUnresolved(x, requester))
       );
       return this.buildResponse(
-        "PLAYLIST_LOADED",
+        "playlist",
         unresolvedPlaylistTracks,
         album.name
       );
     } catch (e: any) {
       return this.buildResponse(
-        e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
+        e.body?.error.message === "invalid id" ? "empty" : "error",
         [],
         undefined,
         e.body?.error.message ?? e.message
@@ -364,13 +364,13 @@ export class Spotify extends Plugin {
       );
 
       return this.buildResponse(
-        "PLAYLIST_LOADED",
+        "playlist",
         unresolvedPlaylistTracks,
         artist.name
       );
     } catch (e: any) {
       return this.buildResponse(
-        e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
+        e.body?.error.message === "invalid id" ? "empty" : "error",
         [],
         undefined,
         e.body?.error.message ?? e.message
@@ -385,10 +385,10 @@ export class Spotify extends Plugin {
       )) as SpotifyTrack;
       const unresolvedTrack = await this.buildUnresolved(data, requester);
 
-      return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
+      return this.buildResponse("track", [unresolvedTrack]);
     } catch (e: any) {
       return this.buildResponse(
-        e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
+        e.body?.error.message === "invalid id" ? "empty" : "error",
         [],
         undefined,
         e.body?.error.message ?? e.message
@@ -414,10 +414,10 @@ export class Spotify extends Plugin {
       const unresolvedTracks = await Promise.all(
         data.tracks.items.map((x: any) => this.buildUnresolved(x, requester))
       );
-      return this.buildResponse("TRACK_LOADED", unresolvedTracks);
+      return this.buildResponse("track", unresolvedTracks);
     } catch (e: any) {
       return this.buildResponse(
-        e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
+        e.body?.error.message === "invalid id" ? "empty" : "error",
         [],
         undefined,
         e.body?.error.message ?? e.message
