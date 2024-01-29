@@ -455,7 +455,7 @@ export class Spotify extends Plugin {
           isStream: false,
           title: track.name,
           uri: `https://open.spotify.com/track/${track.id}`,
-          image: track.album?.images[0]?.url,
+          artworkUrl: track.album?.images[0]?.url,
         },
       },
       requester
