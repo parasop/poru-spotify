@@ -440,23 +440,26 @@ export class Spotify extends Plugin {
   }
 
   async buildUnresolved(track: any, requester: any) {
-    if (!track)
-      throw new ReferenceError("The Spotify track object was not provided");
-
+    if (!track) return
+   
     return new Track(
       {
-        track: "",
+        encoded: "",
         info: {
           sourceName: "spotify",
           identifier: track.id,
           isSeekable: true,
           author: track.artists[0]?.name || "Unknown Artist",
           length: track.duration_ms,
-          isStream: false,
+          position:0,
+          isrc:null,
+          isStream:false,
           title: track.name,
           uri: `https://open.spotify.com/track/${track.id}`,
-          image: track.album?.images[0]?.url,
+          artworkUrl: track.album?.images[0]?.url,
         },
+        pluginInfo:{},
+        userData:{}
       },
       requester
     );

@@ -224,7 +224,7 @@ export declare class Spotify extends Plugin {
     } | {
         exception?: undefined;
     })>;
-    fetch(query: string, source: string, requester: any): any;
+    fetch(query: string, requester: any): any;
     fetchPlaylistTracks(spotifyPlaylist: SpotifyPlaylist): Promise<void>;
     buildUnresolved(track: any, requester: any): Promise<Track>;
     compareValue(value: boolean): boolean;

@@ -79,7 +79,7 @@ class Spotify extends poru_1.Plugin {
         if (query.startsWith(SHORT_LINK_PATTERN))
             return this.decodeSpotifyShortLink({ query, source, requester });
         if (source === "spotify" && !this.check(query))
-            return this.fetch(query, source, requester);
+            return this.fetch(query, requester);
         const data = spotifyPattern.exec(query) ?? [];
         const id = data[2];
         switch (data[1]) {
@@ -98,7 +98,7 @@ class Spotify extends poru_1.Plugin {
             default: {
                 return this._resolve({
                     query,
-                    source: source ?? this.poru.options.defaultPlatform,
+                    source: this.poru.options.defaultPlatform,
                     requester: requester,
                 });
             }
@@ -160,12 +160,12 @@ class Spotify extends poru_1.Plugin {
             return this.buildResponse(e.body?.error.message === "invalid id" ? "empty" : "error", [], undefined, e.body?.error.message ?? e.message);
         }
     }
-    async fetch(query, source, requester) {
+    async fetch(query, requester) {
         try {
             if (this.check(query))
                 return this.resolve({
                     query,
-                    source: source ?? this.poru.options.defaultPlatform,
+                    source: this.poru.options.defaultPlatform,
                     requester,
                 });
             const data = await this.spotifyManager.send(`/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"}`);
@@ -192,20 +192,24 @@ class Spotify extends poru_1.Plugin {
     }
     async buildUnresolved(track, requester) {
         if (!track)
-            throw new ReferenceError("The Spotify track object was not provided");
+            return;
         return new poru_1.Track({
-            track: "",
+            encoded: "",
             info: {
                 sourceName: "spotify",
                 identifier: track.id,
                 isSeekable: true,
                 author: track.artists[0]?.name || "Unknown Artist",
                 length: track.duration_ms,
+                position: 0,
+                isrc: null,
                 isStream: false,
                 title: track.name,
                 uri: `https://open.spotify.com/track/${track.id}`,
-                image: track.album?.images[0]?.url,
+                artworkUrl: track.album?.images[0]?.url,
             },
+            pluginInfo: {},
+            userData: {}
         }, requester);
     }
     compareValue(value) {
