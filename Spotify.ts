@@ -3,6 +3,7 @@ import cheerio from "cheerio";
 
 import { Plugin, Poru, ResolveOptions, Track } from "poru";
 import { SpotifyManager } from "./spotifyManager";
+import { userInfo } from "os";
 const spotifyPattern =
   /^(?:https:\/\/open\.spotify\.com\/(?:intl-\w+\/)?(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 const SHORT_LINK_PATTERN = "https://spotify.link";
@@ -445,7 +446,9 @@ export class Spotify extends Plugin {
 
     return new Track(
       {
-        track: "",
+        encoded: "",
+        userData:{},
+        pluginInfo:{},
         info: {
           sourceName: "spotify",
           identifier: track.id,
@@ -455,10 +458,12 @@ export class Spotify extends Plugin {
           isStream: false,
           title: track.name,
           uri: `https://open.spotify.com/track/${track.id}`,
-          image: track.album?.images[0]?.url,
+          artworkUrl: track.album?.images[0]?.url,
+          position: 0,
+          isrc: ""
         },
       },
-      requester
+      requester,
     );
   }
 
