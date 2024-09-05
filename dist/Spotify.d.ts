@@ -226,6 +226,22 @@ export declare class Spotify extends Plugin {
     })>;
     fetch(query: string, requester: any): any;
     fetchPlaylistTracks(spotifyPlaylist: SpotifyPlaylist): Promise<void>;
+    getRecommendTracks(query: string, limit: number, requester: any): Promise<{
+        loadType: loadType;
+        tracks: any;
+        playlistInfo: {
+            name: string;
+        } | {
+            name?: undefined;
+        };
+    } & ({
+        exception: {
+            message: string;
+            severity: string;
+        };
+    } | {
+        exception?: undefined;
+    })>;
     buildUnresolved(track: any, requester: any): Promise<Track>;
     compareValue(value: boolean): boolean;
     buildResponse(loadType: loadType, tracks: any, playlistName?: string, exceptionMsg?: string): {

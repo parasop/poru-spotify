@@ -190,6 +190,17 @@ class Spotify extends poru_1.Plugin {
             pageLoaded++;
         }
     }
+    async getRecommendTracks(query, limit = 10, requester) {
+        const response = await this.spotifyManager.send(`/search?q=${encodeURIComponent(query)}&type=track&limit=1&market=${this.options.searchMarket ?? "US"}`);
+        const data = response?.tracks?.items[0];
+        if (!data?.id) {
+            throw new Error("No tracks found for the given query.");
+        }
+        const recommendTracks = await this.spotifyManager.send(`/recommendations?seed_tracks=${data.id}&limit=${limit}&market=${this.options.searchMarket ?? "US"}`);
+        const unresolvedTracks = await Promise.all(recommendTracks?.tracks.map((x) => this.buildUnresolved(x, requester)));
+        return this.buildResponse("playlist", unresolvedTracks, "Recommended Tracks");
+        // return recommendTracks; 
+    }
     async buildUnresolved(track, requester) {
         if (!track)
             return;
