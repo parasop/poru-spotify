@@ -98,7 +98,7 @@ class Spotify extends poru_1.Plugin {
             default: {
                 return this._resolve({
                     query,
-                    source: this.poru.options.defaultPlatform,
+                    source: source || this.poru.options.defaultPlatform,
                     requester: requester,
                 });
             }

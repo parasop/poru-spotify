@@ -274,7 +274,7 @@ export class Spotify extends Plugin {
       default: {
         return this._resolve({
           query,
-          source: this.poru.options.defaultPlatform,
+          source: source ||this.poru.options.defaultPlatform,
           requester: requester,
         });
       }
