@@ -226,7 +226,7 @@ export declare class Spotify extends Plugin {
     })>;
     fetch(query: string, requester: any): any;
     fetchPlaylistTracks(spotifyPlaylist: SpotifyPlaylist): Promise<void>;
-    getRecommendTracks(query: string, limit: number, requester: any): Promise<{
+    getRecommendTracks(ID: string, limit: number, requester: any): Promise<{
         loadType: loadType;
         tracks: any;
         playlistInfo: {
