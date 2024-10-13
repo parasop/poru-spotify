@@ -176,7 +176,7 @@ export class Spotify extends Plugin {
   private interval: number;
   public poru: Poru;
   public options: SpotifyOptions;
-  private _resolve!: ({ query, source, requester }: ResolveOptions) => any;
+  private _resolve!: ({ query, source, requester }: ResolveOptions,node?:any) => any;
   public spotifyManager: SpotifyManager;
 
   constructor(options: SpotifyOptions) {
@@ -249,10 +249,10 @@ export class Spotify extends Plugin {
     return data;
   }
 
-  public async resolve({ query, source, requester }: ResolveOptions) {
+  public async resolve({ query, source, requester }: ResolveOptions,node:any) {
     if (!this.token) await this.requestToken();
     if (query.startsWith(SHORT_LINK_PATTERN))
-      return this.decodeSpotifyShortLink({ query, source, requester });
+      return this.decodeSpotifyShortLink({ query, source, requester },node);
     if (source === "spotify" && !this.check(query))
       return this.fetch(query, requester);
 
@@ -276,19 +276,19 @@ export class Spotify extends Plugin {
           query,
           source: source ||this.poru.options.defaultPlatform,
           requester: requester,
-        });
+        },node);
       }
     }
   }
 
-  async decodeSpotifyShortLink({ query, source, requester }: ResolveOptions) {
+  async decodeSpotifyShortLink({ query, source, requester }: ResolveOptions,node:any) {
     let res = await fetch(query, { method: "GET" });
     const text = await res.text();
     const $ = cheerio.load(text);
     const spotifyLink = $("a.secondary-action");
     const spotifyUrl = spotifyLink.attr("href");
 
-    return this.resolve({ query: spotifyUrl, source, requester });
+    return this.resolve({ query: spotifyUrl, source, requester },node);
   }
 
   async fetchPlaylist(id: string, requester: any) {
@@ -396,14 +396,14 @@ export class Spotify extends Plugin {
     }
   }
 
-  async fetch(query: string, requester: any) {
+  async fetch(query: string, requester: any,node?:any) {
     try {
       if (this.check(query))
         return this.resolve({
           query,
           source: this.poru.options.defaultPlatform,
           requester,
-        });
+        },node);
 
       const data: any = await this.spotifyManager.send(
         `/search/?q="${query}"&type=artist,album,track&market=${

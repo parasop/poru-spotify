@@ -73,11 +73,11 @@ class Spotify extends poru_1.Plugin {
         const data = await req.json();
         return data;
     }
-    async resolve({ query, source, requester }) {
+    async resolve({ query, source, requester }, node) {
         if (!this.token)
             await this.requestToken();
         if (query.startsWith(SHORT_LINK_PATTERN))
-            return this.decodeSpotifyShortLink({ query, source, requester });
+            return this.decodeSpotifyShortLink({ query, source, requester }, node);
         if (source === "spotify" && !this.check(query))
             return this.fetch(query, requester);
         const data = spotifyPattern.exec(query) ?? [];
@@ -100,17 +100,17 @@ class Spotify extends poru_1.Plugin {
                     query,
                     source: source || this.poru.options.defaultPlatform,
                     requester: requester,
-                });
+                }, node);
             }
         }
     }
-    async decodeSpotifyShortLink({ query, source, requester }) {
+    async decodeSpotifyShortLink({ query, source, requester }, node) {
         let res = await (0, undici_1.fetch)(query, { method: "GET" });
         const text = await res.text();
         const $ = cheerio_1.default.load(text);
         const spotifyLink = $("a.secondary-action");
         const spotifyUrl = spotifyLink.attr("href");
-        return this.resolve({ query: spotifyUrl, source, requester });
+        return this.resolve({ query: spotifyUrl, source, requester }, node);
     }
     async fetchPlaylist(id, requester) {
         try {
@@ -160,14 +160,14 @@ class Spotify extends poru_1.Plugin {
             return this.buildResponse(e.body?.error.message === "invalid id" ? "empty" : "error", [], undefined, e.body?.error.message ?? e.message);
         }
     }
-    async fetch(query, requester) {
+    async fetch(query, requester, node) {
         try {
             if (this.check(query))
                 return this.resolve({
                     query,
                     source: this.poru.options.defaultPlatform,
                     requester,
-                });
+                }, node);
             const data = await this.spotifyManager.send(`/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"}`);
             const unresolvedTracks = await Promise.all(data.tracks.items.map((x) => this.buildUnresolved(x, requester)));
             return this.buildResponse("track", unresolvedTracks);

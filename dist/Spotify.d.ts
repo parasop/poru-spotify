@@ -158,8 +158,8 @@ export declare class Spotify extends Plugin {
     requestToken(): Promise<void>;
     renew(): Promise<void>;
     requestData(endpoint: string): Promise<unknown>;
-    resolve({ query, source, requester }: ResolveOptions): any;
-    decodeSpotifyShortLink({ query, source, requester }: ResolveOptions): any;
+    resolve({ query, source, requester }: ResolveOptions, node: any): any;
+    decodeSpotifyShortLink({ query, source, requester }: ResolveOptions, node: any): any;
     fetchPlaylist(id: string, requester: any): Promise<{
         loadType: loadType;
         tracks: any;
@@ -224,7 +224,7 @@ export declare class Spotify extends Plugin {
     } | {
         exception?: undefined;
     })>;
-    fetch(query: string, requester: any): any;
+    fetch(query: string, requester: any, node?: any): any;
     fetchPlaylistTracks(spotifyPlaylist: SpotifyPlaylist): Promise<void>;
     getRecommendTracks(ID: string, limit: number, requester: any): Promise<{
         loadType: loadType;
